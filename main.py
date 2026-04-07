@@ -1,13 +1,24 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.api.routers import auth
+from app.api.routers import auth, upload
+from app.services.storage import ensure_bucket
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    ensure_bucket()
+    yield
+
 
 app = FastAPI(
     title="MAVIN API",
     version="1.0.0",
     root_path="/api/v1",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -18,8 +29,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 app.include_router(auth.router)
+app.include_router(upload.router)
 
 
 @app.get("/health")
