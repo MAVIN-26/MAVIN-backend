@@ -15,6 +15,7 @@ from app.api.routers import (
     profile,
     restaurants,
     upload,
+    websocket,
 )
 from app.services.storage import ensure_bucket
 
@@ -55,6 +56,7 @@ app.include_router(profile.router)
 app.include_router(cart.router)
 app.include_router(orders.router)
 app.include_router(orders_owner.router)
+app.include_router(websocket.router)
 
 
 @app.get("/health")
