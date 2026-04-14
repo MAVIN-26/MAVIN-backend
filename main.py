@@ -11,6 +11,7 @@ from app.api.routers import (
     auth,
     cart,
     categories,
+    favorites,
     menu,
     orders,
     orders_owner,
@@ -75,6 +76,7 @@ app.include_router(promo.admin_router)
 app.include_router(subscriptions.public_router)
 app.include_router(subscriptions.customer_router)
 app.include_router(ai.router)
+app.include_router(favorites.router)
 
 
 @app.get("/health")
