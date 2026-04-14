@@ -11,6 +11,7 @@ from app.api.routers import (
     categories,
     menu,
     orders,
+    orders_owner,
     profile,
     restaurants,
     upload,
@@ -53,6 +54,7 @@ app.include_router(menu.owner_router)
 app.include_router(profile.router)
 app.include_router(cart.router)
 app.include_router(orders.router)
+app.include_router(orders_owner.router)
 
 
 @app.get("/health")
