@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     MINIO_BUCKET: str = "mavin-images"
 
     OPENROUTER_API_KEY: str = ""
+    OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    OPENROUTER_MODEL: str = "openai/gpt-4o-mini"
 
     CORS_ORIGINS: list[str] = ["http://localhost:5173"]
 
