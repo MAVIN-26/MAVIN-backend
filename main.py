@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.api.routers import allergens, auth, categories, upload
+from app.api.routers import allergens, auth, categories, restaurants, upload
 from app.services.storage import ensure_bucket
 
 
@@ -35,6 +35,9 @@ app.include_router(allergens.public_router)
 app.include_router(allergens.admin_router)
 app.include_router(categories.public_router)
 app.include_router(categories.admin_router)
+app.include_router(restaurants.public_router)
+app.include_router(restaurants.owner_router)
+app.include_router(restaurants.admin_router)
 
 
 @app.get("/health")
