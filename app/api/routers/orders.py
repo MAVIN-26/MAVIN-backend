@@ -13,6 +13,7 @@ from app.models.menu_item import MenuItem
 from app.models.order import Order, OrderItem, OrderStatus
 from app.models.promo_code import PromoCode, used_promo_codes
 from app.models.restaurant import Restaurant
+from app.models.review import Review
 from app.models.user import User
 from app.schemas.order import (
     OrderCreate,
@@ -21,6 +22,7 @@ from app.schemas.order import (
     OrderList,
     OrderListItem,
 )
+from app.schemas.review import ReviewCreate, ReviewOut
 from app.services.ws_manager import manager as ws_manager
 
 router = APIRouter(prefix="/orders", tags=["orders"])
@@ -233,3 +235,45 @@ async def cancel_order(
         )
 
     return await _build_order_detail(db, order)
+
+
+@router.post("/{order_id}/review", response_model=ReviewOut)
+async def create_order_review(
+    order_id: int,
+    body: ReviewCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    order = await db.get(Order, order_id)
+    if order is None or order.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+    if order.status != OrderStatus.completed:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Order is not completed",
+        )
+    existing = await db.scalar(select(Review).where(Review.order_id == order_id))
+    if existing is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Review already exists"
+        )
+
+    review = Review(
+        order_id=order_id,
+        user_id=current_user.id,
+        restaurant_id=order.restaurant_id,
+        rating=body.rating,
+    )
+    db.add(review)
+    await db.flush()
+
+    avg = await db.scalar(
+        select(func.avg(Review.rating)).where(Review.restaurant_id == order.restaurant_id)
+    )
+    restaurant = await db.get(Restaurant, order.restaurant_id)
+    if restaurant is not None:
+        restaurant.average_rating = float(avg) if avg is not None else 0.0
+
+    await db.commit()
+    await db.refresh(review)
+    return review
