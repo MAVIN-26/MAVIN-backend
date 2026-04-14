@@ -12,6 +12,8 @@ __all__ = [
     "RegisterRequest",
     "LoginRequest",
     "AuthResponse",
+    "ProfileUpdateRequest",
+    "PasswordChangeRequest",
 ]
 
 
@@ -50,3 +52,15 @@ class AuthResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserProfileWithAllergens
+
+
+class ProfileUpdateRequest(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    email: EmailStr | None = None
+    allergen_ids: list[int] | None = None
+
+
+class PasswordChangeRequest(BaseModel):
+    old_password: str
+    new_password: str
