@@ -13,6 +13,7 @@ from app.api.routers import (
     orders,
     orders_owner,
     profile,
+    promo,
     restaurants,
     upload,
     websocket,
@@ -57,6 +58,8 @@ app.include_router(cart.router)
 app.include_router(orders.router)
 app.include_router(orders_owner.router)
 app.include_router(websocket.router)
+app.include_router(promo.customer_router)
+app.include_router(promo.admin_router)
 
 
 @app.get("/health")
