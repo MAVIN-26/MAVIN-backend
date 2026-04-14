@@ -3,13 +3,16 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr
 
 from app.models.user import UserRole
+from app.schemas.allergen import AllergenOut
 
-
-class AllergenOut(BaseModel):
-    id: int
-    name: str
-
-    model_config = {"from_attributes": True}
+__all__ = [
+    "AllergenOut",
+    "UserProfile",
+    "UserProfileWithAllergens",
+    "RegisterRequest",
+    "LoginRequest",
+    "AuthResponse",
+]
 
 
 class UserProfile(BaseModel):
