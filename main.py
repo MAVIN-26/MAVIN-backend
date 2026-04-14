@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -15,16 +16,26 @@ from app.api.routers import (
     profile,
     promo,
     restaurants,
+    subscriptions,
     upload,
     websocket,
 )
 from app.services.storage import ensure_bucket
+from app.services.subscription_expiry import run_expiry_loop
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     ensure_bucket()
-    yield
+    expiry_task = asyncio.create_task(run_expiry_loop())
+    try:
+        yield
+    finally:
+        expiry_task.cancel()
+        try:
+            await expiry_task
+        except asyncio.CancelledError:
+            pass
 
 
 app = FastAPI(
@@ -60,6 +71,8 @@ app.include_router(orders_owner.router)
 app.include_router(websocket.router)
 app.include_router(promo.customer_router)
 app.include_router(promo.admin_router)
+app.include_router(subscriptions.public_router)
+app.include_router(subscriptions.customer_router)
 
 
 @app.get("/health")
