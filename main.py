@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.api.routers import (
+    ai,
     allergens,
     auth,
     cart,
@@ -73,6 +74,7 @@ app.include_router(promo.customer_router)
 app.include_router(promo.admin_router)
 app.include_router(subscriptions.public_router)
 app.include_router(subscriptions.customer_router)
+app.include_router(ai.router)
 
 
 @app.get("/health")
