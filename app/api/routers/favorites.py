@@ -1,15 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from fastapi import APIRouter, Depends, status
 
 from app.api.deps import get_current_user, require_role
-from app.db.session import get_db
-from app.models.favorite import Favorite
-from app.models.restaurant import Restaurant
 from app.models.user import User
 from app.schemas.restaurant import RestaurantPublic
+from app.services.favorite import FavoriteService, get_favorite_service
 
 router = APIRouter(
     prefix="/favorites",
@@ -21,42 +15,18 @@ router = APIRouter(
 @router.get("", response_model=list[RestaurantPublic])
 async def list_favorites(
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    service: FavoriteService = Depends(get_favorite_service),
 ):
-    result = await db.execute(
-        select(Restaurant)
-        .join(Favorite, Favorite.restaurant_id == Restaurant.id)
-        .options(selectinload(Restaurant.categories))
-        .where(Favorite.user_id == current_user.id)
-        .order_by(Favorite.id.desc())
-    )
-    return result.scalars().all()
+    return await service.list_for_user(current_user.id)
 
 
 @router.post("/{rest_id}")
 async def add_favorite(
     rest_id: int,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    service: FavoriteService = Depends(get_favorite_service),
 ):
-    restaurant = await db.get(Restaurant, rest_id)
-    if restaurant is None or not restaurant.is_active:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
-
-    existing = await db.scalar(
-        select(Favorite).where(
-            Favorite.user_id == current_user.id,
-            Favorite.restaurant_id == rest_id,
-        )
-    )
-    if existing is not None:
-        return {"message": "OK"}
-
-    db.add(Favorite(user_id=current_user.id, restaurant_id=rest_id))
-    try:
-        await db.commit()
-    except IntegrityError:
-        await db.rollback()
+    await service.add(current_user.id, rest_id)
     return {"message": "OK"}
 
 
@@ -64,14 +34,6 @@ async def add_favorite(
 async def remove_favorite(
     rest_id: int,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    service: FavoriteService = Depends(get_favorite_service),
 ):
-    favorite = await db.scalar(
-        select(Favorite).where(
-            Favorite.user_id == current_user.id,
-            Favorite.restaurant_id == rest_id,
-        )
-    )
-    if favorite is not None:
-        await db.delete(favorite)
-        await db.commit()
+    await service.remove(current_user.id, rest_id)
