@@ -2,14 +2,6 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-PLAN_FEATURES: dict[str, list[str]] = {
-    "Студент+": [
-        "Доступ к ИИ-нутрициологу",
-        "Скидка 5% на все заказы",
-        "Приоритетная готовка",
-    ],
-}
-
 
 class SubscriptionPlanOut(BaseModel):
     id: int
