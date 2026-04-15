@@ -1,19 +1,13 @@
-from datetime import datetime, timedelta, timezone
-
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from fastapi import APIRouter, Depends
 
 from app.api.deps import get_current_user, require_role
-from app.db.session import get_db
-from app.models.subscription import Subscription, SubscriptionPlan
 from app.models.user import User
 from app.schemas.subscription import (
     SubscriptionBuyRequest,
     SubscriptionPlanOut,
     UserSubscriptionOut,
 )
+from app.services.subscription import SubscriptionService, get_subscription_service
 
 public_router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 customer_router = APIRouter(
@@ -23,106 +17,34 @@ customer_router = APIRouter(
 )
 
 
-def _plan_to_out(plan: SubscriptionPlan) -> SubscriptionPlanOut:
-    return SubscriptionPlanOut(
-        id=plan.id,
-        name=plan.name,
-        price=float(plan.price),
-        duration_days=plan.duration_days,
-        features=[f.title for f in plan.features if f.is_active],
-    )
-
-
-async def _get_active_subscription(db: AsyncSession, user_id: int) -> Subscription | None:
-    result = await db.execute(
-        select(Subscription)
-        .options(selectinload(Subscription.plan).selectinload(SubscriptionPlan.features))
-        .where(Subscription.user_id == user_id, Subscription.is_active.is_(True))
-    )
-    return result.scalars().first()
-
-
 @public_router.get("/plans", response_model=list[SubscriptionPlanOut])
-async def list_plans(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(SubscriptionPlan)
-        .options(selectinload(SubscriptionPlan.features))
-        .order_by(SubscriptionPlan.id)
-    )
-    plans = result.scalars().all()
-    return [_plan_to_out(p) for p in plans]
+async def list_plans(service: SubscriptionService = Depends(get_subscription_service)):
+    return await service.list_plans()
 
 
 @customer_router.get("/my", response_model=UserSubscriptionOut)
 async def my_subscription(
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
-    sub = await _get_active_subscription(db, current_user.id)
+    sub = await service.get_my(current_user.id)
     if sub is None:
         return UserSubscriptionOut(is_active=False)
-    return UserSubscriptionOut(
-        plan=_plan_to_out(sub.plan),
-        expires_at=sub.expires_at,
-        is_active=sub.is_active,
-        is_cancelled=sub.is_cancelled,
-    )
+    return sub
 
 
 @customer_router.post("/buy", response_model=UserSubscriptionOut)
 async def buy_subscription(
     body: SubscriptionBuyRequest,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
-    plan = await db.get(SubscriptionPlan, body.plan_id)
-    if plan is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found")
-
-    now = datetime.now(timezone.utc)
-    sub = await _get_active_subscription(db, current_user.id)
-    if sub is not None:
-        base = sub.expires_at if sub.expires_at > now else now
-        sub.expires_at = base + timedelta(days=plan.duration_days)
-        sub.is_cancelled = False
-        sub.is_active = True
-        sub.plan_id = plan.id
-    else:
-        sub = Subscription(
-            user_id=current_user.id,
-            plan_id=plan.id,
-            expires_at=now + timedelta(days=plan.duration_days),
-            is_active=True,
-            is_cancelled=False,
-        )
-        db.add(sub)
-
-    current_user.is_premium = True
-    await db.commit()
-    sub = await _get_active_subscription(db, current_user.id)
-
-    return UserSubscriptionOut(
-        plan=_plan_to_out(sub.plan),
-        expires_at=sub.expires_at,
-        is_active=sub.is_active,
-        is_cancelled=sub.is_cancelled,
-    )
+    return await service.buy(current_user, body.plan_id)
 
 
 @customer_router.post("/cancel", response_model=UserSubscriptionOut)
 async def cancel_subscription(
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    service: SubscriptionService = Depends(get_subscription_service),
 ):
-    sub = await _get_active_subscription(db, current_user.id)
-    if sub is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Active subscription not found")
-    sub.is_cancelled = True
-    await db.commit()
-    sub = await _get_active_subscription(db, current_user.id)
-    return UserSubscriptionOut(
-        plan=_plan_to_out(sub.plan),
-        expires_at=sub.expires_at,
-        is_active=sub.is_active,
-        is_cancelled=sub.is_cancelled,
-    )
+    return await service.cancel(current_user.id)
