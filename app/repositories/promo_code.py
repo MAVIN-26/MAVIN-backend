@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, insert, or_, select
 from sqlalchemy.exc import IntegrityError
 
 from app.models.promo_code import PromoCode, used_promo_codes
@@ -44,6 +44,11 @@ class PromoCodeRepository(BaseRepository[PromoCode]):
             )
         )
         return result is not None
+
+    async def mark_used(self, user_id: int, promo_id: int) -> None:
+        await self.db.execute(
+            insert(used_promo_codes).values(user_id=user_id, promo_code_id=promo_id)
+        )
 
     async def create(
         self, code: str, discount_percent: int, expires_at: datetime | None
