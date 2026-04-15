@@ -14,6 +14,12 @@ class UserRepository(BaseRepository[User]):
         )
         return result.scalar_one_or_none()
 
+    async def find_by_email(self, email: str) -> User | None:
+        return await self.db.scalar(select(User).where(User.email == email))
+
+    async def find_by_phone(self, phone: str) -> User | None:
+        return await self.db.scalar(select(User).where(User.phone == phone))
+
     async def find_by_email_excluding(self, email: str, exclude_user_id: int) -> User | None:
         return await self.db.scalar(
             select(User).where(User.email == email, User.id != exclude_user_id)
