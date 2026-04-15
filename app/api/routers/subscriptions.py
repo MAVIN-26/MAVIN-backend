@@ -10,7 +10,6 @@ from app.db.session import get_db
 from app.models.subscription import Subscription, SubscriptionPlan
 from app.models.user import User
 from app.schemas.subscription import (
-    PLAN_FEATURES,
     SubscriptionBuyRequest,
     SubscriptionPlanOut,
     UserSubscriptionOut,
@@ -30,14 +29,14 @@ def _plan_to_out(plan: SubscriptionPlan) -> SubscriptionPlanOut:
         name=plan.name,
         price=float(plan.price),
         duration_days=plan.duration_days,
-        features=PLAN_FEATURES.get(plan.name, []),
+        features=[f.title for f in plan.features if f.is_active],
     )
 
 
 async def _get_active_subscription(db: AsyncSession, user_id: int) -> Subscription | None:
     result = await db.execute(
         select(Subscription)
-        .options(selectinload(Subscription.plan))
+        .options(selectinload(Subscription.plan).selectinload(SubscriptionPlan.features))
         .where(Subscription.user_id == user_id, Subscription.is_active.is_(True))
     )
     return result.scalars().first()
@@ -45,7 +44,11 @@ async def _get_active_subscription(db: AsyncSession, user_id: int) -> Subscripti
 
 @public_router.get("/plans", response_model=list[SubscriptionPlanOut])
 async def list_plans(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(SubscriptionPlan).order_by(SubscriptionPlan.id))
+    result = await db.execute(
+        select(SubscriptionPlan)
+        .options(selectinload(SubscriptionPlan.features))
+        .order_by(SubscriptionPlan.id)
+    )
     plans = result.scalars().all()
     return [_plan_to_out(p) for p in plans]
 
@@ -96,7 +99,7 @@ async def buy_subscription(
 
     current_user.is_premium = True
     await db.commit()
-    await db.refresh(sub, attribute_names=["plan"])
+    sub = await _get_active_subscription(db, current_user.id)
 
     return UserSubscriptionOut(
         plan=_plan_to_out(sub.plan),
@@ -116,7 +119,7 @@ async def cancel_subscription(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Active subscription not found")
     sub.is_cancelled = True
     await db.commit()
-    await db.refresh(sub, attribute_names=["plan"])
+    sub = await _get_active_subscription(db, current_user.id)
     return UserSubscriptionOut(
         plan=_plan_to_out(sub.plan),
         expires_at=sub.expires_at,
