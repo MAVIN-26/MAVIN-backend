@@ -21,6 +21,9 @@ class Restaurant(Base):
     pickup_address: Mapped[str] = mapped_column(String, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     average_rating: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    review_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    preparation_time_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    preparation_time_max: Mapped[int | None] = mapped_column(Integer, nullable=True)
     restaurant_admin_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
@@ -33,4 +36,10 @@ class Restaurant(Base):
     )
     menu_items: Mapped[list["MenuItem"]] = relationship(  # noqa: F821
         "MenuItem", back_populates="restaurant", cascade="all, delete-orphan"
+    )
+    menu_categories: Mapped[list["MenuCategory"]] = relationship(  # noqa: F821
+        "MenuCategory",
+        back_populates="restaurant",
+        cascade="all, delete-orphan",
+        order_by="MenuCategory.sort_order",
     )
