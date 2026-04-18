@@ -15,6 +15,7 @@ class RestaurantRepository(BaseRepository[Restaurant]):
         search: str | None,
         page: int,
         limit: int,
+        sort: str | None = None,
     ) -> PaginatedResult[Restaurant]:
         base = select(Restaurant).where(Restaurant.is_active.is_(True))
         if category_id is not None:
@@ -23,9 +24,21 @@ class RestaurantRepository(BaseRepository[Restaurant]):
             base = base.where(Restaurant.name.ilike(f"%{search}%"))
 
         total = await self.db.scalar(select(func.count()).select_from(base.subquery()))
+
+        if sort == "rating_asc":
+            order_cols = [Restaurant.average_rating.asc(), Restaurant.id.asc()]
+        elif sort == "name_asc":
+            order_cols = [Restaurant.name.asc(), Restaurant.id.asc()]
+        elif sort == "name_desc":
+            order_cols = [Restaurant.name.desc(), Restaurant.id.desc()]
+        elif sort == "rating_desc":
+            order_cols = [Restaurant.average_rating.desc(), Restaurant.id.asc()]
+        else:
+            order_cols = [Restaurant.id.asc()]
+
         result = await self.db.execute(
             base.options(selectinload(Restaurant.categories))
-            .order_by(Restaurant.id)
+            .order_by(*order_cols)
             .offset((page - 1) * limit)
             .limit(limit)
         )

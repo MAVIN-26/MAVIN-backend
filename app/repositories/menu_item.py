@@ -1,10 +1,12 @@
+from datetime import datetime, timedelta, timezone
 from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
 from app.models.allergen import Allergen
 from app.models.menu_item import MenuItem
+from app.models.order import Order, OrderItem
 from app.repositories.base import BaseRepository
 
 
@@ -57,3 +59,40 @@ class MenuItemRepository(BaseRepository[MenuItem]):
             .where(MenuItem.id == item_id)
         )
         return result.scalar_one_or_none()
+
+    async def list_user_choice(
+        self,
+        restaurant_id: int,
+        top_n: int,
+        period_days: int,
+    ) -> Sequence[MenuItem]:
+        """Top-N available menu items for restaurant ranked by order count over period."""
+        since = datetime.now(timezone.utc) - timedelta(days=period_days)
+
+        ranked_ids_stmt = (
+            select(
+                OrderItem.menu_item_id.label("mid"),
+                func.sum(OrderItem.quantity).label("cnt"),
+            )
+            .join(Order, Order.id == OrderItem.order_id)
+            .where(
+                Order.restaurant_id == restaurant_id,
+                Order.created_at >= since,
+                OrderItem.menu_item_id.is_not(None),
+            )
+            .group_by(OrderItem.menu_item_id)
+            .order_by(func.sum(OrderItem.quantity).desc())
+            .limit(top_n)
+        ).subquery()
+
+        result = await self.db.execute(
+            select(MenuItem)
+            .options(selectinload(MenuItem.allergens))
+            .join(ranked_ids_stmt, ranked_ids_stmt.c.mid == MenuItem.id)
+            .where(
+                MenuItem.restaurant_id == restaurant_id,
+                MenuItem.is_available.is_(True),
+            )
+            .order_by(ranked_ids_stmt.c.cnt.desc(), MenuItem.id)
+        )
+        return result.scalars().all()
