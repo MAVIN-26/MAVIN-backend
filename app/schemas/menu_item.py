@@ -15,6 +15,8 @@ class MenuItemBase(BaseModel):
     proteins: float | None = None
     fats: float | None = None
     carbs: float | None = None
+    weight_grams: int | None = None
+    menu_category_id: int | None = None
     allergens: list[AllergenOut] = []
 
     model_config = {"from_attributes": True}
@@ -37,6 +39,8 @@ class MenuItemCreate(BaseModel):
     proteins: float | None = None
     fats: float | None = None
     carbs: float | None = None
+    weight_grams: int | None = None
+    menu_category_id: int | None = None
     allergen_ids: list[int] = []
 
 
@@ -49,6 +53,8 @@ class MenuItemUpdate(BaseModel):
     proteins: float | None = None
     fats: float | None = None
     carbs: float | None = None
+    weight_grams: int | None = None
+    menu_category_id: int | None = None
     allergen_ids: list[int] | None = None
 
 
