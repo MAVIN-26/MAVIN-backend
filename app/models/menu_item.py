@@ -26,9 +26,16 @@ class MenuItem(Base):
     proteins: Mapped[float | None] = mapped_column(Float, nullable=True)
     fats: Mapped[float | None] = mapped_column(Float, nullable=True)
     carbs: Mapped[float | None] = mapped_column(Float, nullable=True)
+    weight_grams: Mapped[int | None] = mapped_column(Integer, nullable=True)
     is_available: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    menu_category_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("menu_categories.id", ondelete="SET NULL"), nullable=True
+    )
 
     restaurant: Mapped["Restaurant"] = relationship("Restaurant", back_populates="menu_items")  # noqa: F821
     allergens: Mapped[list["Allergen"]] = relationship(  # noqa: F821
         "Allergen", secondary=menu_item_allergens, back_populates="menu_items"
+    )
+    menu_category: Mapped["MenuCategory | None"] = relationship(  # noqa: F821
+        "MenuCategory", back_populates="menu_items"
     )

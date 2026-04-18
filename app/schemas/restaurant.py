@@ -1,6 +1,11 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 from app.schemas.category import CategoryOut
+
+
+RestaurantSort = Literal["rating_desc", "rating_asc", "name_asc", "name_desc"]
 
 
 class RestaurantBase(BaseModel):
@@ -10,6 +15,9 @@ class RestaurantBase(BaseModel):
     photo_url: str | None = None
     pickup_address: str
     average_rating: float
+    review_count: int
+    preparation_time_min: int | None = None
+    preparation_time_max: int | None = None
     categories: list[CategoryOut] = []
 
     model_config = {"from_attributes": True}
@@ -43,6 +51,8 @@ class RestaurantOwnerUpdate(BaseModel):
     description: str | None = None
     photo_url: str | None = None
     pickup_address: str | None = None
+    preparation_time_min: int | None = None
+    preparation_time_max: int | None = None
 
 
 class RestaurantAdminCreate(BaseModel):
@@ -50,6 +60,8 @@ class RestaurantAdminCreate(BaseModel):
     pickup_address: str
     restaurant_admin_id: int
     category_ids: list[int] = []
+    preparation_time_min: int | None = None
+    preparation_time_max: int | None = None
 
 
 class RestaurantAdminUpdate(BaseModel):
@@ -60,3 +72,5 @@ class RestaurantAdminUpdate(BaseModel):
     is_active: bool | None = None
     category_ids: list[int] | None = None
     restaurant_admin_id: int | None = None
+    preparation_time_min: int | None = None
+    preparation_time_max: int | None = None

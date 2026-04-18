@@ -13,6 +13,7 @@ from app.api.routers import (
     categories,
     favorites,
     menu,
+    menu_categories,
     orders,
     orders_owner,
     profile,
@@ -66,6 +67,8 @@ app.include_router(restaurants.owner_router)
 app.include_router(restaurants.admin_router)
 app.include_router(menu.public_router)
 app.include_router(menu.owner_router)
+app.include_router(menu_categories.public_router)
+app.include_router(menu_categories.owner_router)
 app.include_router(profile.router)
 app.include_router(cart.router)
 app.include_router(orders.router)

@@ -30,6 +30,17 @@ async def list_public_menu(
     return await service.list_public(restaurant_id, max_calories, max_price, exclude_allergen_ids)
 
 
+@public_router.get(
+    "/restaurants/{restaurant_id}/menu/user-choice",
+    response_model=list[MenuItemPublic],
+)
+async def list_user_choice_menu(
+    restaurant_id: int,
+    service: MenuItemService = Depends(get_menu_item_service),
+):
+    return await service.list_user_choice(restaurant_id)
+
+
 @owner_router.get("", response_model=list[MenuItemOwner])
 async def list_owner_menu(
     current_user: User = Depends(get_current_user),

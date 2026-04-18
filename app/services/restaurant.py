@@ -44,8 +44,11 @@ class RestaurantService:
         search: str | None,
         page: int,
         limit: int,
+        sort: str | None = None,
     ) -> PaginatedResult[Restaurant]:
-        return await self.repo.list_active_paginated(category_id, search, page, limit)
+        return await self.repo.list_active_paginated(
+            category_id, search, page, limit, sort
+        )
 
     async def get_public(self, restaurant_id: int) -> Restaurant:
         restaurant = await self.repo.get_active_with_categories(restaurant_id)
@@ -90,6 +93,8 @@ class RestaurantService:
             pickup_address=body.pickup_address,
             restaurant_admin_id=body.restaurant_admin_id,
             categories=categories,
+            preparation_time_min=body.preparation_time_min,
+            preparation_time_max=body.preparation_time_max,
         )
         self.repo.add(restaurant)
         await self.repo.commit()

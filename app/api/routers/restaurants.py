@@ -10,6 +10,7 @@ from app.schemas.restaurant import (
     RestaurantList,
     RestaurantOwnerUpdate,
     RestaurantPublic,
+    RestaurantSort,
 )
 from app.services.restaurant import RestaurantService, get_restaurant_service
 
@@ -32,9 +33,10 @@ async def list_restaurants(
     search: str | None = Query(None),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
+    sort: RestaurantSort | None = Query(None),
     service: RestaurantService = Depends(get_restaurant_service),
 ):
-    result = await service.list_public(category_id, search, page, limit)
+    result = await service.list_public(category_id, search, page, limit, sort)
     return RestaurantList(items=result.items, total=result.total, page=result.page, limit=result.limit)
 
 
