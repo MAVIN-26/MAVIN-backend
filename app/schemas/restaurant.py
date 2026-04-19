@@ -8,6 +8,18 @@ from app.schemas.category import CategoryOut
 RestaurantSort = Literal["rating_desc", "rating_asc", "name_asc", "name_desc"]
 
 
+class RestaurantAdminOut(BaseModel):
+    """Compact view of a restaurant's admin user for admin-facing listings."""
+
+    id: int
+    first_name: str
+    last_name: str
+    phone: str
+    email: str
+
+    model_config = {"from_attributes": True}
+
+
 class RestaurantBase(BaseModel):
     id: int
     name: str
@@ -30,6 +42,9 @@ class RestaurantPublic(RestaurantBase):
 class RestaurantFull(RestaurantBase):
     is_active: bool
     restaurant_admin_id: int | None = None
+    # Inline admin details for the site-admin restaurants table.
+    # Nullable because the FK is ON DELETE SET NULL.
+    restaurant_admin: RestaurantAdminOut | None = None
 
 
 class RestaurantList(BaseModel):
