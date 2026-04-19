@@ -49,7 +49,10 @@ class RestaurantRepository(BaseRepository[Restaurant]):
         total = await self.db.scalar(select(func.count(Restaurant.id)))
         result = await self.db.execute(
             select(Restaurant)
-            .options(selectinload(Restaurant.categories))
+            .options(
+                selectinload(Restaurant.categories),
+                selectinload(Restaurant.restaurant_admin),
+            )
             .order_by(Restaurant.id)
             .offset((page - 1) * limit)
             .limit(limit)
@@ -68,7 +71,10 @@ class RestaurantRepository(BaseRepository[Restaurant]):
     async def get_with_categories(self, restaurant_id: int) -> Restaurant | None:
         result = await self.db.execute(
             select(Restaurant)
-            .options(selectinload(Restaurant.categories))
+            .options(
+                selectinload(Restaurant.categories),
+                selectinload(Restaurant.restaurant_admin),
+            )
             .where(Restaurant.id == restaurant_id)
         )
         return result.scalar_one_or_none()
