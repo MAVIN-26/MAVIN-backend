@@ -16,7 +16,7 @@ class MenuItemBase(BaseModel):
     fats: float | None = None
     carbs: float | None = None
     weight_grams: int | None = None
-    menu_category_id: int | None = None
+    menu_category_id: int
     allergens: list[AllergenOut] = []
 
     model_config = {"from_attributes": True}
@@ -40,7 +40,7 @@ class MenuItemCreate(BaseModel):
     fats: float | None = None
     carbs: float | None = None
     weight_grams: int | None = None
-    menu_category_id: int | None = None
+    menu_category_id: int
     allergen_ids: list[int] = []
 
 
