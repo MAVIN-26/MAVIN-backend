@@ -24,10 +24,8 @@ class MenuItemService:
         self.menu_categories = MenuCategoryRepository(db)
 
     async def _validate_menu_category(
-        self, menu_category_id: int | None, restaurant_id: int
+        self, menu_category_id: int, restaurant_id: int
     ) -> None:
-        if menu_category_id is None:
-            return
         category = await self.menu_categories.get_by_id(menu_category_id)
         if category is None or category.restaurant_id != restaurant_id:
             raise HTTPException(
@@ -136,6 +134,11 @@ class MenuItemService:
         allergen_ids = data.pop("allergen_ids", None)
 
         if "menu_category_id" in data:
+            if data["menu_category_id"] is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="menu_category_id is required",
+                )
             await self._validate_menu_category(data["menu_category_id"], item.restaurant_id)
 
         for field, value in data.items():

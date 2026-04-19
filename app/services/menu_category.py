@@ -1,6 +1,7 @@
 from typing import Sequence
 
 from fastapi import Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -84,10 +85,18 @@ class MenuCategoryService:
             )
 
     async def delete_owner(self, category_id: int, user_id: int) -> None:
-        """Delete category. FK on menu_items.menu_category_id is SET NULL."""
+        """Delete category. FK on menu_items.menu_category_id is RESTRICT,
+        so deleting a category that still has menu items raises IntegrityError."""
         category = await self._get_owned_category(category_id, user_id)
         await self.repo.delete(category)
-        await self.repo.commit()
+        try:
+            await self.repo.commit()
+        except IntegrityError:
+            await self.repo.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Category has menu items; reassign or delete them first",
+            )
 
 
 def get_menu_category_service(
