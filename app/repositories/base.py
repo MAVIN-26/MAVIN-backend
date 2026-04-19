@@ -45,5 +45,8 @@ class BaseRepository(Generic[T]):
     async def commit(self) -> None:
         await self.db.commit()
 
+    async def rollback(self) -> None:
+        await self.db.rollback()
+
     async def refresh(self, obj: T, attribute_names: list[str] | None = None) -> None:
         await self.db.refresh(obj, attribute_names=attribute_names)
