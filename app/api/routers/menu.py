@@ -24,10 +24,21 @@ async def list_public_menu(
     restaurant_id: int,
     max_calories: int | None = Query(None),
     max_price: float | None = Query(None),
+    max_proteins: float | None = Query(None),
+    max_fats: float | None = Query(None),
+    max_carbs: float | None = Query(None),
     exclude_allergen_ids: str | None = Query(None),
     service: MenuItemService = Depends(get_menu_item_service),
 ):
-    return await service.list_public(restaurant_id, max_calories, max_price, exclude_allergen_ids)
+    return await service.list_public(
+        restaurant_id,
+        max_calories,
+        max_price,
+        max_proteins,
+        max_fats,
+        max_carbs,
+        exclude_allergen_ids,
+    )
 
 
 @public_router.get(

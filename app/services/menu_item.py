@@ -84,6 +84,9 @@ class MenuItemService:
         restaurant_id: int,
         max_calories: int | None,
         max_price: float | None,
+        max_proteins: float | None,
+        max_fats: float | None,
+        max_carbs: float | None,
         exclude_allergen_ids_raw: str | None,
     ) -> Sequence[MenuItem]:
         restaurant = await self.restaurants.get_by_id(restaurant_id)
@@ -94,7 +97,13 @@ class MenuItemService:
             )
         exclude_ids = self._parse_exclude_ids(exclude_allergen_ids_raw)
         return await self.repo.list_public_filtered(
-            restaurant_id, max_calories, max_price, exclude_ids
+            restaurant_id,
+            max_calories,
+            max_price,
+            max_proteins,
+            max_fats,
+            max_carbs,
+            exclude_ids,
         )
 
     async def list_user_choice(self, restaurant_id: int) -> Sequence[MenuItem]:

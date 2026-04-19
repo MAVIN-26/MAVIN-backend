@@ -18,6 +18,9 @@ class MenuItemRepository(BaseRepository[MenuItem]):
         restaurant_id: int,
         max_calories: int | None,
         max_price: float | None,
+        max_proteins: float | None,
+        max_fats: float | None,
+        max_carbs: float | None,
         exclude_allergen_ids: Sequence[int],
     ) -> Sequence[MenuItem]:
         query = (
@@ -32,6 +35,12 @@ class MenuItemRepository(BaseRepository[MenuItem]):
             query = query.where(MenuItem.calories <= max_calories)
         if max_price is not None:
             query = query.where(MenuItem.price <= max_price)
+        if max_proteins is not None:
+            query = query.where(MenuItem.proteins <= max_proteins)
+        if max_fats is not None:
+            query = query.where(MenuItem.fats <= max_fats)
+        if max_carbs is not None:
+            query = query.where(MenuItem.carbs <= max_carbs)
         if exclude_allergen_ids:
             excluded_item_ids = (
                 select(MenuItem.id)
