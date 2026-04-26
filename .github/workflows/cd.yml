@@ -1,0 +1,38 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Copy files to server
+        run: |
+          rsync -avz --delete \
+            --exclude='.env' \
+            --exclude='.git' \
+            --exclude='.venv' \
+            --exclude='__pycache__' \
+            --exclude='*.pyc' \
+            --exclude='.claude' \
+            --exclude='CLAUDE.md' \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/mavin-backend/
+
+      - name: Start application
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "export PATH=\$PATH:\$HOME/.local/bin && cd ~/mavin-backend && docker-compose up -d --build"
