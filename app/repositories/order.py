@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 from app.models.order import Order, OrderStatus
 from app.models.restaurant import Restaurant
 from app.models.user import User
-from app.repositories.base import BaseRepository, PaginatedResult
+from app.repositories.base import BaseRepository
 
 
 class OrderRepository(BaseRepository[Order]):
