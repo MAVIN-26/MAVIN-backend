@@ -1,9 +1,36 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Table, Column, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+
+subscription_plan_features = Table(
+    "subscription_plan_features",
+    Base.metadata,
+    Column(
+        "plan_id",
+        Integer,
+        ForeignKey("subscription_plans.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column(
+        "feature_id",
+        Integer,
+        ForeignKey("subscription_features.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)
+
+
+class SubscriptionFeature(Base):
+    __tablename__ = "subscription_features"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
 
 class SubscriptionPlan(Base):
@@ -13,6 +40,12 @@ class SubscriptionPlan(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     duration_days: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    features: Mapped[list["SubscriptionFeature"]] = relationship(
+        "SubscriptionFeature",
+        secondary=subscription_plan_features,
+        order_by="SubscriptionFeature.sort_order",
+    )
 
 
 class Subscription(Base):
