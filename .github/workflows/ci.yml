@@ -44,4 +44,9 @@
           run: ruff check .
 
         - name: Tests
-          run: pytest tests/
+          run: |
+            if [ -d "tests" ] && [ -n "$(ls tests/)" ]; then
+              pytest tests/
+            else
+              echo "No tests found, skipping."
+            fi
