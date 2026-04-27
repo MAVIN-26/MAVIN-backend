@@ -44,6 +44,14 @@ jobs:
                -o ~/.docker/cli-plugins/docker-compose && \
              chmod +x ~/.docker/cli-plugins/docker-compose"
 
+      - name: Ensure frontend-dist exists
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "mkdir -p ~/mavin-backend/frontend-dist && \
+             [ -f ~/mavin-backend/frontend-dist/index.html ] || \
+             echo '<html><body>Frontend not deployed yet</body></html>' > ~/mavin-backend/frontend-dist/index.html"
+
       - name: Start application
         run: |
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
