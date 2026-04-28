@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Sequence
 
 from sqlalchemy import func, select
@@ -74,3 +75,17 @@ class OrderRepository(BaseRepository[Order]):
         )
         rows = [(order, user) for order, user in result.all()]
         return rows, total or 0
+
+    async def count_created_since(self, since: datetime) -> int:
+        total = await self.db.scalar(
+            select(func.count(Order.id)).where(Order.created_at >= since)
+        )
+        return total or 0
+
+    async def sum_revenue_completed(self) -> float:
+        total = await self.db.scalar(
+            select(func.coalesce(func.sum(Order.total), 0)).where(
+                Order.status == OrderStatus.completed
+            )
+        )
+        return float(total or 0)
