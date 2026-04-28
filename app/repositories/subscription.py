@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
 from app.models.subscription import Subscription, SubscriptionPlan
@@ -29,3 +30,12 @@ class SubscriptionRepository(BaseRepository[Subscription]):
             .where(Subscription.user_id == user_id, Subscription.is_active.is_(True))
         )
         return result.scalars().first()
+
+    async def count_active(self, now: datetime) -> int:
+        total = await self.db.scalar(
+            select(func.count(Subscription.id)).where(
+                Subscription.is_active.is_(True),
+                Subscription.expires_at > now,
+            )
+        )
+        return total or 0
