@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from pydantic import BaseModel, Field
 
 
@@ -8,15 +6,16 @@ class CartItemOut(BaseModel):
     menu_item_id: int
     name: str
     photo_url: str | None = None
-    price: Decimal
+    price: float
     quantity: int
+    subtotal: float
 
 
 class CartOut(BaseModel):
     restaurant_id: int | None = None
     restaurant_name: str | None = None
     items: list[CartItemOut] = []
-    total: Decimal = Decimal("0")
+    subtotal: float = 0
 
 
 class CartItemCreate(BaseModel):
