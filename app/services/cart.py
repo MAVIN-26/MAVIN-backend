@@ -42,28 +42,30 @@ class CartService:
                 restaurant_name = restaurant.name
 
         items_out: list[CartItemOut] = []
-        total = Decimal("0")
+        subtotal = Decimal("0")
         for ci in cart.items:
             mi = menu_by_id.get(ci.menu_item_id)
             if mi is None:
                 continue
+            item_subtotal = Decimal(mi.price) * ci.quantity
             items_out.append(
                 CartItemOut(
                     id=ci.id,
                     menu_item_id=mi.id,
                     name=mi.name,
                     photo_url=mi.photo_url,
-                    price=mi.price,
+                    price=float(mi.price),
                     quantity=ci.quantity,
+                    subtotal=float(item_subtotal),
                 )
             )
-            total += Decimal(mi.price) * ci.quantity
+            subtotal += item_subtotal
 
         return CartOut(
             restaurant_id=cart.restaurant_id,
             restaurant_name=restaurant_name,
             items=items_out,
-            total=total,
+            subtotal=float(subtotal),
         )
 
     async def get(self, user_id: int) -> CartOut:
