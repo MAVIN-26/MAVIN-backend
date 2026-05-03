@@ -7,6 +7,9 @@ router = APIRouter(tags=["websocket"])
 
 
 def _extract_token(websocket: WebSocket) -> str | None:
+    token = websocket.query_params.get("token")
+    if token:
+        return token
     raw = websocket.headers.get("sec-websocket-protocol")
     if not raw:
         return None
