@@ -20,11 +20,11 @@ class CartService:
     async def _get_or_create(self, user_id: int) -> Cart:
         cart = await self.repo.get_with_items(user_id)
         if cart is None:
-            cart = Cart(user_id=user_id)
-            self.repo.add(cart)
+            new_cart = Cart(user_id=user_id)
+            self.repo.add(new_cart)
             await self.repo.commit()
-            await self.repo.refresh(cart)
-            cart.items = []
+            cart = await self.repo.get_with_items(user_id)
+            assert cart is not None
         return cart
 
     async def _build_out(self, cart: Cart) -> CartOut:
