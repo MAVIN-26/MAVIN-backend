@@ -6,7 +6,6 @@ from app.services.category import CategoryService, get_category_service
 
 public_router = APIRouter(tags=["categories"])
 admin_router = APIRouter(
-    prefix="/admin/categories",
     tags=["admin-categories"],
     dependencies=[Depends(require_role("site_admin"))],
 )
@@ -17,7 +16,7 @@ async def list_categories(service: CategoryService = Depends(get_category_servic
     return await service.list()
 
 
-@admin_router.post("", response_model=CategoryOut, status_code=status.HTTP_201_CREATED)
+@admin_router.post("/categories", response_model=CategoryOut, status_code=status.HTTP_201_CREATED)
 async def create_category(
     body: CategoryCreate,
     service: CategoryService = Depends(get_category_service),
@@ -25,7 +24,7 @@ async def create_category(
     return await service.create(body.name)
 
 
-@admin_router.put("/{category_id}", response_model=CategoryOut)
+@admin_router.put("/categories/{category_id}", response_model=CategoryOut)
 async def update_category(
     category_id: int,
     body: CategoryUpdate,
@@ -34,7 +33,7 @@ async def update_category(
     return await service.update(category_id, body.name)
 
 
-@admin_router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
+@admin_router.delete("/categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_category(
     category_id: int,
     service: CategoryService = Depends(get_category_service),
