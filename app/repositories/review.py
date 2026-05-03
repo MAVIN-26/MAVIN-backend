@@ -15,3 +15,9 @@ class ReviewRepository(BaseRepository[Review]):
             select(func.avg(Review.rating)).where(Review.restaurant_id == restaurant_id)
         )
         return float(avg) if avg is not None else None
+
+    async def count_for_restaurant(self, restaurant_id: int) -> int:
+        result = await self.db.scalar(
+            select(func.count(Review.id)).where(Review.restaurant_id == restaurant_id)
+        )
+        return int(result or 0)

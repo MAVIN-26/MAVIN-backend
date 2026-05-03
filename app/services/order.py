@@ -293,9 +293,11 @@ class OrderService:
         await self.db.flush()
 
         avg = await self.reviews.average_rating_for_restaurant(order.restaurant_id)
+        count = await self.reviews.count_for_restaurant(order.restaurant_id)
         restaurant = await self.restaurants.get_by_id(order.restaurant_id)
         if restaurant is not None:
             restaurant.average_rating = avg if avg is not None else 0.0
+            restaurant.review_count = count
 
         await self.reviews.commit()
         await self.reviews.refresh(review)
