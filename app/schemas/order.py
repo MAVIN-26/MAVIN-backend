@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
 from app.models.order import OrderStatus, PaymentMethod
 
@@ -14,6 +14,11 @@ class OrderItemOut(BaseModel):
     quantity: int
 
     model_config = {"from_attributes": True}
+
+    @computed_field
+    @property
+    def subtotal(self) -> Decimal:
+        return self.price * self.quantity
 
 
 class OrderListItem(BaseModel):
