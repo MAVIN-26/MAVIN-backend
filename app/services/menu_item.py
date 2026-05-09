@@ -106,17 +106,33 @@ class MenuItemService:
             exclude_ids,
         )
 
-    async def list_user_choice(self, restaurant_id: int) -> Sequence[MenuItem]:
+    async def list_user_choice(
+        self,
+        restaurant_id: int,
+        max_calories: int | None,
+        max_price: float | None,
+        max_proteins: float | None,
+        max_fats: float | None,
+        max_carbs: float | None,
+        exclude_allergen_ids_raw: str | None,
+    ) -> Sequence[MenuItem]:
         restaurant = await self.restaurants.get_by_id(restaurant_id)
         if restaurant is None or not restaurant.is_active:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Restaurant not found",
             )
+        exclude_ids = self._parse_exclude_ids(exclude_allergen_ids_raw)
         return await self.repo.list_user_choice(
             restaurant_id,
             top_n=USER_CHOICE_TOP_N,
             period_days=USER_CHOICE_PERIOD_DAYS,
+            max_calories=max_calories,
+            max_price=max_price,
+            max_proteins=max_proteins,
+            max_fats=max_fats,
+            max_carbs=max_carbs,
+            exclude_allergen_ids=exclude_ids,
         )
 
     async def list_owner(self, user_id: int) -> Sequence[MenuItem]:
