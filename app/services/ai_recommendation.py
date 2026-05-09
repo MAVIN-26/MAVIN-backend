@@ -37,7 +37,7 @@ class AIRecommendationService:
             )
 
         menu_items = await self.menu_items.list_public_filtered(
-            body.restaurant_id, None, None, []
+            body.restaurant_id, None, None, None, None, None, []
         )
 
         user_with_allergens = await self.users.get_with_allergens(user.id)
