@@ -74,6 +74,12 @@ class MenuItemRepository(BaseRepository[MenuItem]):
         restaurant_id: int,
         top_n: int,
         period_days: int,
+        max_calories: int | None,
+        max_price: float | None,
+        max_proteins: float | None,
+        max_fats: float | None,
+        max_carbs: float | None,
+        exclude_allergen_ids: Sequence[int],
     ) -> Sequence[MenuItem]:
         """Top-N available menu items for restaurant ranked by order count over period."""
         since = datetime.now(timezone.utc) - timedelta(days=period_days)
@@ -94,7 +100,7 @@ class MenuItemRepository(BaseRepository[MenuItem]):
             .limit(top_n)
         ).subquery()
 
-        result = await self.db.execute(
+        query = (
             select(MenuItem)
             .options(selectinload(MenuItem.allergens))
             .join(ranked_ids_stmt, ranked_ids_stmt.c.mid == MenuItem.id)
@@ -102,6 +108,26 @@ class MenuItemRepository(BaseRepository[MenuItem]):
                 MenuItem.restaurant_id == restaurant_id,
                 MenuItem.is_available.is_(True),
             )
-            .order_by(ranked_ids_stmt.c.cnt.desc(), MenuItem.id)
+        )
+        if max_calories is not None:
+            query = query.where(MenuItem.calories <= max_calories)
+        if max_price is not None:
+            query = query.where(MenuItem.price <= max_price)
+        if max_proteins is not None:
+            query = query.where(MenuItem.proteins <= max_proteins)
+        if max_fats is not None:
+            query = query.where(MenuItem.fats <= max_fats)
+        if max_carbs is not None:
+            query = query.where(MenuItem.carbs <= max_carbs)
+        if exclude_allergen_ids:
+            excluded_item_ids = (
+                select(MenuItem.id)
+                .join(MenuItem.allergens)
+                .where(Allergen.id.in_(exclude_allergen_ids))
+            )
+            query = query.where(MenuItem.id.notin_(excluded_item_ids))
+
+        result = await self.db.execute(
+            query.order_by(ranked_ids_stmt.c.cnt.desc(), MenuItem.id)
         )
         return result.scalars().all()

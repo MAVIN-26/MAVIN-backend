@@ -30,6 +30,8 @@ class RestaurantBase(BaseModel):
     review_count: int
     preparation_time_min: int | None = None
     preparation_time_max: int | None = None
+    card_bg_color: str | None = None
+    card_bg_image_url: str | None = None
     categories: list[CategoryOut] = []
 
     model_config = {"from_attributes": True}
@@ -68,6 +70,8 @@ class RestaurantOwnerUpdate(BaseModel):
     pickup_address: str | None = None
     preparation_time_min: int | None = None
     preparation_time_max: int | None = None
+    card_bg_color: str | None = None
+    card_bg_image_url: str | None = None
 
 
 class RestaurantAdminCreate(BaseModel):
@@ -89,3 +93,5 @@ class RestaurantAdminUpdate(BaseModel):
     restaurant_admin_id: int | None = None
     preparation_time_min: int | None = None
     preparation_time_max: int | None = None
+    card_bg_color: str | None = None
+    card_bg_image_url: str | None = None
