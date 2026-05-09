@@ -24,6 +24,8 @@ class Restaurant(Base):
     review_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     preparation_time_min: Mapped[int | None] = mapped_column(Integer, nullable=True)
     preparation_time_max: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    card_bg_color: Mapped[str | None] = mapped_column(String(9), nullable=True)
+    card_bg_image_url: Mapped[str | None] = mapped_column(String, nullable=True)
     restaurant_admin_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
